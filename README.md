@@ -1,120 +1,246 @@
-# Boas práticas de arquitetura DDD
+# C# Domain-Driven Design Clean Architecture
 
-Domain-Driven Design (DDD):
-O Domain-Driven Design (DDD) é uma abordagem de desenvolvimento de software que coloca o foco principal no domínio do problema que está sendo resolvido. Em DDD, o domínio é o cerne do software, e é nele que a lógica de negócios e as regras estão encapsuladas.
-Podemos comparar o domínio com uma "linguagem comum" entre os desenvolvedores e especialistas do domínio. É importante mapear e entender os conceitos do domínio, identificar entidades, agregados, serviços e valores. Dessa forma, podemos criar um modelo de domínio rico e expressivo, que reflete com precisão as necessidades do negócio.
+> A practical case study demonstrating Domain-Driven Design (DDD) using C#, focusing on domain modeling, clean architecture and scalable system design.
 
-Além disso, DDD incentiva a separação das preocupações em diferentes camadas da aplicação, como a camada de infraestrutura, aplicação e domínio, buscando um design mais modular e desacoplado. Isso facilita a manutenção, testabilidade e evolução do software ao longo do tempo.
+![C#](https://img.shields.io/badge/C%23-.NET-blue?style=for-the-badge&logo=csharp)
+![DDD](https://img.shields.io/badge/Architecture-DDD-purple?style=for-the-badge)
+![Clean Architecture](https://img.shields.io/badge/Pattern-Clean%20Architecture-green?style=for-the-badge)
+![Design](https://img.shields.io/badge/Focus-Domain%20Modeling-orange?style=for-the-badge)
+![Status](https://img.shields.io/badge/Status-Case%20Study-black?style=for-the-badge)
 
+---
+
+## Overview
+
+Domain-Driven Design (DDD) is an approach that puts the business domain at the center of the system.
+
+Instead of focusing on frameworks or databases, DDD focuses on:
+
+- Business rules
+- Domain language
+- Model consistency
+- Clear boundaries
+
+---
+
+## The Problem
+
+Traditional systems often suffer from:
+
+```text
+Anemic domain models
+```
+DDD solves this by making the domain the core of the system.
+
+## What is DDD?
+
+DDD is about modeling software based on real-world business concepts.
+```text
+Domain = business logic + rules
+Code = representation of the domain
+```
+## Ubiquitous Language
+
+DDD introduces a shared language between:
+
+Developers
+Business experts
+Stakeholders
+```text
+Cliente → Customer
+Pedido → Order
+Cancelamento → Cancellation
+```
+This eliminates ambiguity.
+
+## Core Building Blocks
+Entities
+
+Objects with identity.
 ```csharp
-// Camada de Domínio
+public class Cliente
+{
+    public int Id { get; set; }
+    public string Nome { get; set; }
+}
+```
+## Value Objects
+
+Immutable objects compared by value.
+```csharp
+public class Endereco
+{
+    public string Rua { get; set; }
+    public string Cidade { get; set; }
+}
+```
+## Aggregates
+
+Group of entities with a root.
+```csharp
+public class Pedido
+{
+    public int Id { get; set; }
+    public Cliente Cliente { get; set; }
+    public ICollection<ItemPedido> Itens { get; set; }
+}
+```
+## Domain Services
+
+Business logic that does not belong to a single entity.
+```csharp
+public interface IPedidoService
+{
+    void CriarPedido(Pedido pedido);
+    void CancelarPedido(int pedidoId);
+}
+```
+## Repositories
+
+Abstraction for data persistence.
+```csharp
+public interface IClienteRepository
+{
+    Cliente ObterPorId(int clienteId);
+    void Salvar(Cliente cliente);
+}
+```
+## Domain Events
+
+Represents important events in the system.
+```csharp
+public class PedidoCriadoEvent
+{
+    public Pedido Pedido { get; set; }
+}
+```
+## Architecture Layers
+
+DDD is commonly structured in layers:
+```text
+Domain Layer        → Business rules
+Application Layer   → Use cases
+Infrastructure      → External systems (DB, APIs)
+```
+## Example Implementation
+Domain Layer
+```csharp
 namespace MinhaAplicacao.Domain.Models
 {
-    // Entidades representam objetos do domínio que possuem identidade própria
     public class Cliente
     {
         public int Id { get; set; }
         public string Nome { get; set; }
-        public string Email { get; set; }
-        // ...
     }
 
-    // Agregados são objetos compostos por entidades e possuem uma raiz de agregado
     public class Pedido
     {
         public int Id { get; set; }
         public Cliente Cliente { get; set; }
         public ICollection<ItemPedido> Itens { get; set; }
-        // ...
-    }
-
-    // Value Objects representam conceitos imutáveis do domínio e são comparados por valor
-    public class Endereco
-    {
-        public string Rua { get; set; }
-        public string Cidade { get; set; }
-        public string Estado { get; set; }
-        // ...
-    }
-
-    // Serviços são responsáveis por operações que não pertencem a uma única entidade ou agregado
-    public interface IPedidoService
-    {
-        void CriarPedido(Pedido pedido);
-        void CancelarPedido(int pedidoId);
-        // ...
-    }
-
-    // Repositórios são interfaces que definem operações de persistência relacionadas a uma entidade
-    public interface IClienteRepository
-    {
-        Cliente ObterPorId(int clienteId);
-        void Salvar(Cliente cliente);
-        // ...
-    }
-
-    // Eventos de domínio representam acontecimentos importantes no sistema
-    public class PedidoCriadoEvent
-    {
-        public Pedido Pedido { get; set; }
-        // ...
-    }
-}
-
-// Camada de Aplicação
-
-namespace MinhaAplicacao.Application.Services
-{
-    public class PedidoService : IPedidoService
-    {
-        private readonly IClienteRepository _clienteRepository;
-
-        public PedidoService(IClienteRepository clienteRepository)
-        {
-            _clienteRepository = clienteRepository;
-        }
-
-        public void CriarPedido(Pedido pedido)
-        {
-            // Lógica de negócio para criar um pedido
-            // ...
-
-            // Salvando as alterações no cliente
-            var cliente = _clienteRepository.ObterPorId(pedido.Cliente.Id);
-            cliente.AtualizarStatusCliente("Ativo");
-
-            // Disparando evento de domínio
-            var pedidoCriadoEvent = new PedidoCriadoEvent { Pedido = pedido };
-            EventDispatcher.Publish(pedidoCriadoEvent);
-        }
-
-        public void CancelarPedido(int pedidoId)
-        {
-            // Lógica de negócio para cancelar um pedido
-            // ...
-        }
-    }
-}
-
-// Camada de Infraestrutura
-
-namespace MinhaAplicacao.Infrastructure.Repositories
-{
-    public class ClienteRepository : IClienteRepository
-    {
-        public Cliente ObterPorId(int clienteId)
-        {
-            // Implementação para obter um cliente do banco de dados
-            // ...
-        }
-
-        public void Salvar(Cliente cliente)
-        {
-            // Implementação para salvar um cliente no banco de dados
-            // ...
-        }
     }
 }
 ```
-## Livro
-![Imagem](https://m.media-amazon.com/images/I/51YTqGVOD7L._SY425_.jpg)
+## Application Layer
+```csharp
+public class PedidoService : IPedidoService
+{
+    private readonly IClienteRepository _clienteRepository;
+
+    public PedidoService(IClienteRepository clienteRepository)
+    {
+        _clienteRepository = clienteRepository;
+    }
+
+    public void CriarPedido(Pedido pedido)
+    {
+        var cliente = _clienteRepository.ObterPorId(pedido.Cliente.Id);
+
+        cliente.AtualizarStatusCliente("Ativo");
+
+        var evento = new PedidoCriadoEvent { Pedido = pedido };
+        EventDispatcher.Publish(evento);
+    }
+}
+```
+## Infrastructure Layer
+```csharp
+public class ClienteRepository : IClienteRepository
+{
+    public Cliente ObterPorId(int clienteId)
+    {
+        // database logic
+    }
+
+    public void Salvar(Cliente cliente)
+    {
+        // persistence logic
+    }
+}
+```
+## Architecture Insight
+```text
+Domain = pure business logic
+Application = orchestration
+Infrastructure = external concerns
+```
+## Why DDD Works
+
+DDD improves:
+```text
+Code readability
+Maintainability
+Scalability
+Business alignment
+```
+## Real Engineering Benefits
+
+In real-world systems:
+```text
+Easier evolution of business rules
+Clear system boundaries
+Independent services (microservices ready)
+Better collaboration with business teams
+```
+## Common Mistakes in DDD
+
+❌ Using DDD for simple CRUD systems
+❌ Overengineering the domain
+❌ Mixing infrastructure with domain
+❌ Ignoring bounded contexts
+❌ Not defining aggregates properly
+
+## When to Use DDD
+
+Use DDD when:
+
+Business rules are complex
+Domain logic is critical
+System will evolve over time
+Multiple teams work on the system
+
+## Summary
+
+DDD is not about code.
+
+It is about understanding the business deeply and reflecting it in software.
+```text
+Good code models the system
+Great code models the business
+```
+```markdown
+## Real World Use Cases
+
+- Banking systems
+- Order processing systems
+- Logistics platforms
+- Regulatory systems (ANM-like)
+```
+## Author
+
+Thiago Lima
+Software Engineer | System Design | Distributed Systems
+
+Business logic spread across layers
+Tight coupling to infrastructure
+Low expressiveness
