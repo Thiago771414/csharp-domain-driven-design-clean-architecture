@@ -341,6 +341,10 @@ Great code models the business
 - Logistics platforms
 - Regulatory systems (ANM-like)
 ```
+Strong phrase for the article:
+
+> **DTO stands for inbound contract. Value Object is a domain rule. Mixing the two is letting HTTP invade the heart of the system.**
+
 ## Author
 
 Thiago Lima
