@@ -178,6 +178,108 @@ public class ClienteRepository : IClienteRepository
     }
 }
 ```
+## Thin Controllers: HTTP Is Not the Business
+
+In a DDD architecture, controllers should be thin.
+
+The controller is responsible for understanding the HTTP layer, not for making business decisions.
+
+```text
+HTTP Request
+   ↓
+Controller
+   ↓
+Request DTO / Command
+   ↓
+Application Service
+   ↓
+Domain Model / Value Objects
+```
+A common mistake is allowing HTTP DTOs to travel through the entire system.
+
+This creates coupling between the API contract and the domain model.
+```text
+Wrong:
+Controller → DTO → Application → Domain → Infrastructure
+
+Better:
+Controller → DTO/Command → Application → Domain Objects
+```
+The DTO belongs to the external boundary.
+
+The domain layer should work with entities, aggregates and value objects, not with HTTP request objects.
+## Example
+Request DTO
+```csharp
+public class CriarPedidoRequest
+{
+    public int ClienteId { get; set; }
+    public List<ItemPedidoRequest> Itens { get; set; }
+}
+```
+## Controller
+```csharp
+[ApiController]
+[Route("api/pedidos")]
+public class PedidoController : ControllerBase
+{
+    private readonly CriarPedidoUseCase _criarPedidoUseCase;
+
+    public PedidoController(CriarPedidoUseCase criarPedidoUseCase)
+    {
+        _criarPedidoUseCase = criarPedidoUseCase;
+    }
+
+    [HttpPost]
+    public IActionResult CriarPedido([FromBody] CriarPedidoRequest request)
+    {
+        var command = new CriarPedidoCommand(
+            request.ClienteId,
+            request.Itens.Select(i => new CriarItemPedidoCommand(
+                i.ProdutoId,
+                i.Quantidade
+            )).ToList()
+        );
+
+        _criarPedidoUseCase.Execute(command);
+
+        return Created();
+    }
+}
+```
+## Application Layer
+```csharp
+public class CriarPedidoUseCase
+{
+    public void Execute(CriarPedidoCommand command)
+    {
+        var clienteId = new ClienteId(command.ClienteId);
+
+        var itens = command.Itens
+            .Select(i => new ItemPedido(
+                new ProdutoId(i.ProdutoId),
+                new Quantidade(i.Quantidade)
+            ))
+            .ToList();
+
+        var pedido = Pedido.Criar(clienteId, itens);
+
+        // persistir pedido / publicar evento / orquestrar fluxo
+    }
+}
+```
+## Key Principle
+```text
+Controller handles protocol.
+Application handles use cases.
+Domain handles business rules.
+```
+The controller should not know how to create a valid business object in depth.
+
+It should only translate the HTTP request into an application command.
+
+The domain model is protected from external contracts such as JSON payloads, route parameters or HTTP-specific structures.
+
 ## Architecture Insight
 ```text
 Domain = pure business logic
