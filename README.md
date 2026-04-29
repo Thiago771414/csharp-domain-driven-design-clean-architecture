@@ -29,6 +29,9 @@ Traditional systems often suffer from:
 
 ```text
 Anemic domain models
+Business logic spread across layers
+Tight coupling to infrastructure
+Low expressiveness
 ```
 DDD solves this by making the domain the core of the system.
 
@@ -342,7 +345,3 @@ Great code models the business
 
 Thiago Lima
 Software Engineer | System Design | Distributed Systems
-
-Business logic spread across layers
-Tight coupling to infrastructure
-Low expressiveness
