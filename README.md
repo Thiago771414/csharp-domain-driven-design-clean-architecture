@@ -8,7 +8,7 @@
 ![Design](https://img.shields.io/badge/Focus-Domain%20Modeling-orange?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Case%20Study-black?style=for-the-badge)
 
----
+
 ## Demo
 
 ![DDD](https://github.com/Thiago771414/imagensProjetos/blob/main/slices/mobile/ddd.png)
