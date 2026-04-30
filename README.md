@@ -11,7 +11,7 @@
 ---
 ## Demo
 
-[![DDD](https://github.com/Thiago771414/imagensProjetos/blob/main/slices/mobile/ddd.png)]
+![DDD](https://github.com/Thiago771414/imagensProjetos/blob/main/slices/mobile/ddd.png)
 
 
 ## Overview
